@@ -104,3 +104,117 @@ class TestProductModel(unittest.TestCase):
     #
     # ADD YOUR TEST CASES HERE
     #
+    def test_read_a_product(self):
+        product = ProductFactory()
+        logger.info(f"Created {product}")
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        products = Product.all()
+        self.assertEqual(len(products), 1)
+        new_product = products[0]
+        self.assertEqual(new_product.name, product.name)
+        self.assertEqual(new_product.description, product.description)
+        self.assertEqual(Decimal(new_product.price), product.price)
+        self.assertEqual(new_product.available, product.available)
+        self.assertEqual(new_product.category, product.category)
+
+    def test_update_a_product(self):
+        product = ProductFactory()
+        logger.info(f"Created {product}")
+        product.id = None
+        product.create()
+        logger.info(f"Created {product}")
+        product.description = "New updated description"
+        product.update()
+        self.assertIsNotNone(product.id)
+        self.assertEqual(product.description, "New updated description")
+        products = Product.all()
+        self.assertEqual(len(products), 1)
+        new_product = products[0]
+        self.assertEqual(new_product.name, product.name)
+        self.assertEqual(new_product.description, product.description)
+        self.assertEqual(Decimal(new_product.price), product.price)
+        self.assertEqual(new_product.available, product.available)
+        self.assertEqual(new_product.category, product.category)
+
+    def test_delete_a_product(self):
+        product = ProductFactory()
+        logger.info(f"Created {product}")
+        product.id = None
+        product.create()
+        product.delete()
+        self.assertIsNotNone(product.id)
+        products = Product.all()
+        logger.info(products)
+        self.assertTrue(products == [])
+
+    def test_list_all_products(self):
+        products = Product.all()
+        logger.info(products)
+        self.assertTrue(products == [])
+        products = [ProductFactory() for i in range(5)]
+        logger.info(products)
+        self.assertEqual(len(products), 5)
+        for prod in products:
+            prod.create()
+        products = Product.all()
+        logger.info(products)
+        self.assertTrue(len(products) == 5)
+
+    def test_search_by_name(self):
+        products = ProductFactory.create_batch(5)
+        for product in products:
+            product.create()
+        name = products[0].name
+        count = len([product for product in products if product.name == name])
+        found = Product.find_by_name(name)
+        self.assertEqual(found.count(), count)
+        for product in found:
+            self.assertEqual(product.name, name)
+
+    def test_search_by_category(self):
+        products = ProductFactory.create_batch(10)
+        for product in products:
+            product.create()
+        category = products[0].category
+        count = len([product for product in products if product.category == category])
+        found = Product.find_by_category(category)
+        self.assertEqual(found.count(), count)
+        for product in found:
+            self.assertEqual(product.category, category)
+
+    def test_search_by_availability(self):
+        products = ProductFactory.create_batch(10)
+        for product in products:
+            product.create()
+        available = products[0].available
+        logger.info(f'Availability of first product: {available}')
+        count = len([product for product in products if product.available == available])
+        found = Product.find_by_availability(available)
+        self.assertEqual(found.count(), count)
+        for product in found:
+            self.assertEqual(product.available, available)
+
+    def test_search_by_price(self):
+        products = ProductFactory.create_batch(10)
+        for product in products:
+            product.create()
+        price = products[9].price
+        logger.info(f'Price of last product: {price}')
+        count = len([product for product in products if product.price == price])
+        found = Product.find_by_price(price)
+        self.assertEqual(found.count(), count)
+        for product in found:
+            self.assertEqual(product.price, price)
+
+    def test_deserialize(self):
+        product = ProductFactory.create_batch(1)[0]
+        product.create()
+        dic = product.serialize()
+        dic['category']=0.1
+        with self.assertRaises(DataValidationError):
+            product.deserialize(dic)
+        
+
+
